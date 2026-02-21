@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生態系ピラミッド ギャラリー</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --wolf:#e05252;--deer:#4a90d9;--grass:#5ab04a;
+  --bg:#dde4ec;--card:#fff;--radius:14px;
+}
+body{
+  font-family:'DM Mono',monospace;
+  background:var(--bg);
+  background-image:radial-gradient(circle at 20% 30%,#cddff5 0%,transparent 45%),
+                   radial-gradient(circle at 80% 70%,#d8efd8 0%,transparent 45%);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── 接続画面 ── */
+#joinScreen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.join-card{
+  background:#fff;border-radius:24px;padding:44px 36px;
+  box-shadow:0 20px 60px rgba(0,0,0,.12);
+  text-align:center;width:min(360px,100%);
+}
+.join-emoji{font-size:52px;margin-bottom:14px}
+.join-title{font-family:'Shippori Mincho',serif;font-size:24px;font-weight:600;color:#1a1a1a;margin-bottom:6px}
+.join-sub{font-size:11px;color:#aaa;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:32px}
+.join-label{font-size:13px;color:#555;text-align:left;margin-bottom:8px}
+.join-input{
+  width:100%;padding:13px 15px;border-radius:11px;
+  border:1.5px solid #e0e0e0;font-size:15px;font-family:inherit;
+  outline:none;margin-bottom:14px;transition:border-color .2s;
+}
+.join-input:focus{border-color:#5ab04a}
+.join-btn{
+  width:100%;padding:14px;border-radius:11px;border:none;
+  background:linear-gradient(135deg,#5ab04a,#4a9a3a);
+  color:#fff;font-size:15px;font-weight:600;cursor:pointer;
+  transition:all .2s;font-family:inherit;
+}
+.join-btn:disabled{background:#e0e0e0;color:#aaa;cursor:not-allowed}
+.join-btn:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(90,176,74,.35)}
+
+/* ── メイン画面 ── */
+#mainScreen{display:none}
+
+/* ヘッダー */
+.header{
+  background:#fff;border-bottom:1px solid rgba(0,0,0,.08);
+  padding:12px 20px;display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(0,0,0,.06);
+}
+.header-icon{font-size:22px}
+.header-info{flex:1}
+.header-title{font-size:15px;font-weight:700;color:#1a1a1a}
+.header-sub{font-size:11px;color:#aaa;margin-top:1px}
+.ws-dot{
+  width:8px;height:8px;border-radius:50%;background:#ccc;
+  flex-shrink:0;transition:background .3s;
+}
+.ws-dot.connected{background:#5ab04a;box-shadow:0 0 6px #5ab04a88}
+
+/* タブ */
+.tabs{display:flex;gap:6px}
+.tab-btn{
+  padding:7px 14px;border-radius:8px;border:none;
+  background:#f0f0f0;color:#555;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .2s;font-family:inherit;
+  display:flex;align-items:center;gap:5px;
+}
+.tab-btn.active{background:#1a1a1a;color:#fff}
+.badge{
+  background:#e05252;color:#fff;
+  border-radius:10px;padding:1px 6px;font-size:10px;
+}
+
+/* コンテンツ */
+.content{padding:20px 16px;max-width:960px;margin:0 auto}
+
+/* ── 編集タブ ── */
+.edit-layout{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+.preview-card{
+  background:#fff;border-radius:16px;padding:22px 18px;
+  box-shadow:0 4px 20px rgba(0,0,0,.07);
+  display:flex;flex-direction:column;align-items:center;
+  flex:1 1 260px;min-width:240px;
+}
+.preview-label{font-size:12px;color:#aaa;margin-bottom:14px;letter-spacing:1px}
+.save-status{margin-top:14px;font-size:12px;color:#bbb;transition:color .3s}
+.save-status.saving{color:#5ab04a}
+.save-status.saved{color:#aaa}
+
+.control-panel{flex:1 1 260px;min-width:240px;display:flex;flex-direction:column;gap:10px}
+.ctrl-card{
+  background:#fff;border-radius:14px;padding:12px 14px;
+  box-shadow:0 4px 20px rgba(0,0,0,.07);
+}
+.ctrl-card-title{font-size:13px;font-weight:600;color:#333;margin-bottom:12px}
+
+/* 個体数行 */
+.species-row{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 12px;border-radius:12px;
+  background:#fafafa;border:1.5px solid #ebebeb;
+  border-left-width:3px;margin-bottom:8px;
+}
+.species-row:last-of-type{margin-bottom:0}
+.species-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.species-name{flex:1;font-size:12px;font-weight:600;color:#222}
+.species-count{font-size:22px;font-weight:600;min-width:28px;text-align:center;transition:color .2s}
+.btn-grp{display:flex;gap:4px}
+.adj-btn{
+  width:30px;height:30px;border-radius:8px;
+  border:1.5px solid #e0e0e0;background:#f5f5f5;color:#555;
+  font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.adj-btn:hover:not(:disabled){background:#e8e8e8;transform:scale(1.1)}
+.adj-btn:active:not(:disabled){transform:scale(.88)}
+.adj-btn:disabled{opacity:.3;cursor:not-allowed}
+
+.reset-btn{
+  width:100%;padding:10px;border-radius:10px;
+  border:1.5px solid #e8e8e8;background:#fafafa;color:#999;
+  font-size:12px;cursor:pointer;letter-spacing:1.5px;text-transform:uppercase;
+  transition:all .2s;font-family:inherit;
+}
+.reset-btn:hover{background:#f0f0f0;color:#333;border-color:#ccc}
+
+/* ── ギャラリータブ ── */
+.gallery-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;
+}
+.gallery-title{font-size:14px;font-weight:700;color:#333}
+.gallery-count{color:#aaa;font-weight:400}
+.refresh-btn{
+  padding:6px 14px;border-radius:8px;border:1.5px solid #e0e0e0;
+  background:#fff;font-size:12px;color:#555;cursor:pointer;font-family:inherit;
+}
+.gallery-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:14px;
+}
+.gallery-card{
+  background:#fff;border-radius:16px;padding:18px 14px;
+  box-shadow:0 4px 16px rgba(0,0,0,.07);
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  position:relative;transition:box-shadow .2s;
+}
+.gallery-card.mine{
+  box-shadow:0 0 0 2px #5ab04a,0 4px 20px rgba(90,176,74,.15);
+}
+.mine-badge{
+  position:absolute;top:10px;right:10px;
+  background:#5ab04a;color:#fff;
+  font-size:9px;padding:2px 7px;border-radius:8px;font-weight:700;
+}
+.gallery-name{font-size:13px;font-weight:700;color:#333}
+.gallery-summary{display:flex;gap:8px;font-size:11px;color:#aaa}
+.gallery-time{font-size:10px;color:#ccc}
+
+.empty-state{
+  background:#fff;border-radius:16px;padding:60px 20px;
+  text-align:center;color:#bbb;
+  box-shadow:0 4px 20px rgba(0,0,0,.06);
+}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-text{font-size:14px}
+.empty-sub{font-size:12px;margin-top:6px}
+.gallery-note{margin-top:14px;font-size:11px;color:#bbb;text-align:center}
+
+/* ── ピラミッド描画 ── */
+.pyramid-wrap{display:flex;flex-direction:column;align-items:center;gap:5px}
+.tier-bar{
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;
+  transition:width .5s cubic-bezier(.34,1.15,.64,1),height .5s cubic-bezier(.34,1.15,.64,1);
+}
+.tier-icons{display:grid;justify-items:center;align-items:center}
+.extinct-label{font-size:10px;color:#bbb}
+.pyramid-line{
+  height:2px;width:85%;
+  background:linear-gradient(90deg,transparent,rgba(0,0,0,.1),transparent);
+  border-radius:1px;
+}
+
+@keyframes popIn{
+  from{opacity:0;transform:scale(0.2) rotate(-15deg)}
+  to{opacity:1;transform:scale(1) rotate(0)}
+}
+.pop{animation:popIn .3s cubic-bezier(.34,1.56,.64,1) both}
+</style>
+</head>
+<body>
+
+<!-- 接続画面 -->
+<div id="joinScreen">
+  <div class="join-card">
+    <div class="join-emoji">🌿🦌🐺</div>
+    <div class="join-title">生態系ピラミッド</div>
+    <div class="join-sub">みんなのギャラリー</div>
+    <div class="join-label">あなたの名前を入力してください</div>
+    <input class="join-input" id="nameInput" placeholder="例：たろう、田中、Team A…" maxlength="20">
+    <button class="join-btn" id="joinBtn" disabled onclick="joinGallery()">はじめる →</button>
+  </div>
+</div>
+
+<!-- メイン画面 -->
+<div id="mainScreen">
+  <!-- ヘッダー -->
+  <div class="header">
+    <span class="header-icon">🌿</span>
+    <div class="header-info">
+      <div class="header-title">生態系ピラミッド</div>
+      <div class="header-sub" id="headerSub">接続中…</div>
+    </div>
+    <div class="ws-dot" id="wsDot"></div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tabEdit" onclick="switchTab('edit')">✏️ 編集</button>
+      <button class="tab-btn" id="tabGallery" onclick="switchTab('gallery')">
+        🖼️ 一覧 <span class="badge" id="galleryBadge" style="display:none"></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- 編集タブ -->
+    <div id="editView" class="edit-layout">
+      <div class="preview-card">
+        <div class="preview-label">プレビュー</div>
+        <div id="myPyramid"></div>
+        <div class="save-status" id="saveStatus">未保存</div>
+      </div>
+      <div class="control-panel">
+        <div class="ctrl-card">
+          <div class="ctrl-card-title">個体数を調整</div>
+          <div class="species-row" style="border-left-color:var(--wolf)">
+            <div class="species-icon" style="background:#fff0f0">🐺</div>
+            <div class="species-name">ニホンオオカミ</div>
+            <div class="species-count" id="cnt-wolves" style="color:var(--wolf)">3</div>
+            <div class="btn-grp">
+              <button class="adj-btn" id="minus-wolves" onclick="adj('wolves',-1)">−</button>
+              <button class="adj-btn" id="plus-wolves"  onclick="adj('wolves', 1)">＋</button>
+            </div>
+          </div>
+          <div class="species-row" style="border-left-color:var(--deer)">
+            <div class="species-icon" style="background:#f0f5ff">🦌</div>
+            <div class="species-name">シカ</div>
+            <div class="species-count" id="cnt-deer" style="color:var(--deer)">5</div>
+            <div class="btn-grp">
+              <button class="adj-btn" id="minus-deer" onclick="adj('deer',-1)">−</button>
+              <button class="adj-btn" id="plus-deer"  onclick="adj('deer', 1)">＋</button>
+            </div>
+          </div>
+          <div class="species-row" style="border-left-color:var(--grass)">
+            <div class="species-icon" style="background:#f0fbf0">🌿</div>
+            <div class="species-name">草</div>
+            <div class="species-count" id="cnt-grass" style="color:var(--grass)">10</div>
+            <div class="btn-grp">
+              <button class="adj-btn" id="minus-grass" onclick="adj('grass',-1)">−</button>
+              <button class="adj-btn" id="plus-grass"  onclick="adj('grass', 1)">＋</button>
+            </div>
+          </div>
+        </div>
+        <button class="reset-btn" onclick="resetCounts()">↺ リセット</button>
+      </div>
+    </div>
+
+    <!-- ギャラリータブ -->
+    <div id="galleryView" style="display:none">
+      <div class="gallery-header">
+        <div class="gallery-title">
+          みんなのピラミッド
+          <span class="gallery-count" id="galleryCount"></span>
+        </div>
+      </div>
+      <div class="gallery-grid" id="galleryGrid"></div>
+      <div class="gallery-note">※ 変更はリアルタイムで全員に反映されます</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 定数 ────────────────────────────────────────────────────────
+const MAX = 20;
+const INITIAL = { wolves:3, deer:5, grass:10 };
+const GAP = 4, PAD = 20;
+
+const TIERS = [
+  { key:'wolves', color:'#e05252', bg:'linear-gradient(160deg,#fff5f5,#ffeeee)', border:'rgba(224,82,82,.3)', glow:'rgba(224,82,82,.15)', maxCols:10 },
+  { key:'deer',   color:'#4a90d9', bg:'linear-gradient(160deg,#f2f7ff,#eaf2ff)', border:'rgba(74,144,217,.3)', glow:'rgba(74,144,217,.15)', maxCols:10 },
+  { key:'grass',  color:'#5ab04a', bg:'linear-gradient(160deg,#f2fbf2,#eaf8ea)', border:'rgba(90,176,74,.3)',  glow:'rgba(90,176,74,.15)',  maxCols:10 },
+];
+
+// ── SVG ─────────────────────────────────────────────────────────
+function wolfSVG(s){return`<svg width="${s}" height="${s}" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><polygon points="20,30 26,10 33,30" fill="#b08070"/><polygon points="22,29 26,14 31,29" fill="#f5c5b0"/><polygon points="47,30 54,10 60,30" fill="#b08070"/><polygon points="49,29 54,14 58,29" fill="#f5c5b0"/><ellipse cx="40" cy="40" rx="22" ry="20" fill="#c9927c"/><ellipse cx="40" cy="47" rx="13" ry="9" fill="#f0c8b0"/><circle cx="33" cy="37" r="5" fill="white"/><circle cx="47" cy="37" r="5" fill="white"/><circle cx="34" cy="37" r="3" fill="#3a2010"/><circle cx="48" cy="37" r="3" fill="#3a2010"/><circle cx="34.8" cy="36" r="1.2" fill="white"/><circle cx="48.8" cy="36" r="1.2" fill="white"/><ellipse cx="40" cy="45" rx="4.5" ry="3" fill="#7a3a22"/><path d="M36 49 Q40 53 44 49" stroke="#7a3a22" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="27" cy="43" r="5" fill="rgba(230,120,100,.22)"/><circle cx="53" cy="43" r="5" fill="rgba(230,120,100,.22)"/><ellipse cx="40" cy="67" rx="16" ry="10" fill="#c9927c"/><rect x="27" y="71" width="8" height="9" rx="4" fill="#b07868"/><rect x="45" y="71" width="8" height="9" rx="4" fill="#b07868"/><path d="M56 62 Q70 54 68 68 Q62 65 56 62Z" fill="#c9927c"/></svg>`}
+function deerSVG(s){return`<svg width="${s}" height="${s}" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><path d="M30 24 L23 8 M23 8 L16 12 M23 8 L17 5" stroke="#8B5A2B" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M50 24 L57 8 M57 8 L64 12 M57 8 L63 5" stroke="#8B5A2B" stroke-width="3" stroke-linecap="round" fill="none"/><ellipse cx="22" cy="28" rx="7" ry="11" fill="#c8845a" transform="rotate(-25 22 28)"/><ellipse cx="22" cy="28" rx="4" ry="7" fill="#f5b898" transform="rotate(-25 22 28)"/><ellipse cx="58" cy="28" rx="7" ry="11" fill="#c8845a" transform="rotate(25 58 28)"/><ellipse cx="58" cy="28" rx="4" ry="7" fill="#f5b898" transform="rotate(25 58 28)"/><ellipse cx="40" cy="38" rx="17" ry="17" fill="#d4946a"/><ellipse cx="40" cy="45" rx="11" ry="8" fill="#f5c8a0"/><circle cx="33" cy="35" r="5" fill="white"/><circle cx="47" cy="35" r="5" fill="white"/><circle cx="34" cy="35" r="3" fill="#1a0e00"/><circle cx="48" cy="35" r="3" fill="#1a0e00"/><circle cx="34.9" cy="34" r="1.2" fill="white"/><circle cx="48.9" cy="34" r="1.2" fill="white"/><path d="M29 32 Q33 29.5 37 32" stroke="#1a0e00" stroke-width="1.2" fill="none"/><path d="M43 32 Q47 29.5 51 32" stroke="#1a0e00" stroke-width="1.2" fill="none"/><ellipse cx="40" cy="43" rx="4" ry="2.5" fill="#7a3a20"/><path d="M36.5 47 Q40 50 43.5 47" stroke="#7a3a20" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="27" cy="42" r="5" fill="rgba(240,140,100,.28)"/><circle cx="53" cy="42" r="5" fill="rgba(240,140,100,.28)"/><ellipse cx="40" cy="67" rx="14" ry="10" fill="#c8845a"/><rect x="27" y="71" width="7" height="9" rx="3.5" fill="#a06040"/><rect x="46" y="71" width="7" height="9" rx="3.5" fill="#a06040"/><ellipse cx="54" cy="60" rx="5" ry="6" fill="white" transform="rotate(15 54 60)"/></svg>`}
+function grassSVG(s){return`<svg width="${s}" height="${s}" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><path d="M40 72 Q34 54 22 38 Q28 42 34 54 Q30 36 22 22 Q30 28 38 46 Q35 28 40 10 Q45 28 42 46 Q50 28 58 22 Q50 36 46 54 Q52 42 58 38 Q46 54 40 72Z" fill="#6cc455"/><path d="M40 12 Q42 28 41 46" stroke="#90e070" stroke-width="2.5" stroke-linecap="round" opacity=".55"/><ellipse cx="40" cy="72" rx="10" ry="3.5" fill="#8B6914" opacity=".2"/><circle cx="40" cy="12" r="5" fill="#ffe066"/><circle cx="40" cy="12" r="2.5" fill="#ff9900"/><circle cx="27" cy="30" r="4" fill="#ffccee"/><circle cx="27" cy="30" r="2" fill="#ff88bb"/><circle cx="53" cy="30" r="4" fill="#cceeff"/><circle cx="53" cy="30" r="2" fill="#66aaff"/></svg>`}
+const SVGS = { wolves:wolfSVG, deer:deerSVG, grass:grassSVG };
+
+// ── 状態 ────────────────────────────────────────────────────────
+let myName = '';
+let counts = {...INITIAL};
+let gallery = [];
+let ws = null;
+let saveTimer = null;
+let currentTab = 'edit';
+
+// ── ピラミッド描画 ───────────────────────────────────────────────
+function iconSize(n){ return n<=1?36:n<=4?28:n<=10?22:18; }
+function tierW(n,mc){ if(!n)return 80; const s=iconSize(n),c=Math.min(n,mc); return c*s+(c-1)*GAP+PAD; }
+function tierH(tier,n){ if(!n)return 28; const rows=Math.ceil(n/tier.maxCols),s=iconSize(n); return Math.max(48,rows*(s+GAP)+PAD); }
+
+function buildPyramid(cnts, scale=1){
+  const wrap = document.createElement('div');
+  wrap.className = 'pyramid-wrap';
+
+  TIERS.forEach(tier=>{
+    const n = cnts[tier.key]||0;
+    const bar = document.createElement('div');
+    bar.className = 'tier-bar';
+    const w = tierW(n, tier.maxCols)*scale;
+    const h = tierH(tier, n)*scale;
+    bar.style.cssText=`width:${w}px;height:${h}px;background:${n?tier.bg:'#f5f5f5'};border:1.5px solid ${n?tier.border:'#e8e8e8'};box-shadow:${n?`0 2px 8px ${tier.glow}`:'none'};`;
+
+    if(n){
+      const sz=iconSize(n)*scale;
+      const cols=Math.min(n,tier.maxCols);
+      const grid=document.createElement('div');
+      grid.className='tier-icons';
+      grid.style.cssText=`grid-template-columns:repeat(${cols},${sz}px);gap:${GAP*scale}px;padding:${4*scale}px;`;
+      for(let i=0;i<n;i++){
+        const item=document.createElement('div');
+        item.className='pop';
+        item.style.animationDelay=`${i*25}ms`;
+        item.innerHTML=SVGS[tier.key](sz);
+        grid.appendChild(item);
+      }
+      bar.appendChild(grid);
+    } else {
+      bar.innerHTML='<span class="extinct-label">💀 絶滅</span>';
+    }
+    wrap.appendChild(bar);
+  });
+
+  const line=document.createElement('div');
+  line.className='pyramid-line';
+  wrap.appendChild(line);
+  return wrap;
+}
+
+function renderMyPyramid(){
+  const el = document.getElementById('myPyramid');
+  el.innerHTML='';
+  el.appendChild(buildPyramid(counts, 1.05));
+}
+
+// ── カウント操作 ─────────────────────────────────────────────────
+function adj(key, d){
+  counts[key] = Math.max(0, Math.min(MAX, counts[key]+d));
+  updateUI(key);
+  renderMyPyramid();
+  scheduleSave();
+}
+
+function resetCounts(){
+  counts = {...INITIAL};
+  ['wolves','deer','grass'].forEach(updateUI);
+  renderMyPyramid();
+  scheduleSave();
+}
+
+function updateUI(key){
+  const n = counts[key];
+  const tier = TIERS.find(t=>t.key===key);
+  document.getElementById(`cnt-${key}`).textContent = n;
+  document.getElementById(`cnt-${key}`).style.color = n?tier.color:'#ccc';
+  document.getElementById(`minus-${key}`).disabled = n<=0;
+  document.getElementById(`plus-${key}`).disabled  = n>=MAX;
+}
+
+// ── 保存 ────────────────────────────────────────────────────────
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  const st = document.getElementById('saveStatus');
+  st.className='save-status';
+  st.textContent='編集中…';
+  saveTimer = setTimeout(()=>{ sendSave(); }, 1000);
+}
+
+function sendSave(){
+  if(!ws || ws.readyState!==1) return;
+  ws.send(JSON.stringify({ type:'save', counts }));
+  const st=document.getElementById('saveStatus');
+  st.className='save-status saving';
+  st.textContent='💾 保存済み ✓';
+  setTimeout(()=>{ st.className='save-status saved'; st.textContent='保存済み'; },1500);
+}
+
+// ── ギャラリー描画 ───────────────────────────────────────────────
+function renderGallery(){
+  const grid = document.getElementById('galleryGrid');
+  grid.innerHTML='';
+  document.getElementById('galleryCount').textContent=`（${gallery.length}件）`;
+
+  const badge = document.getElementById('galleryBadge');
+  if(gallery.length>0){ badge.style.display='inline'; badge.textContent=gallery.length; }
+  else { badge.style.display='none'; }
+
+  if(!gallery.length){
+    grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🌿</div><div class="empty-text">まだ誰も保存していません</div><div class="empty-sub">編集タブでピラミッドを作ると自動保存されます</div></div>`;
+    return;
+  }
+
+  gallery.forEach(entry=>{
+    const card=document.createElement('div');
+    card.className='gallery-card'+(entry.name===myName?' mine':'');
+    if(entry.name===myName){ card.innerHTML=`<div class="mine-badge">あなた</div>`; }
+
+    const name=document.createElement('div');
+    name.className='gallery-name';
+    name.textContent=entry.name;
+    card.appendChild(name);
+
+    card.appendChild(buildPyramid(entry.counts, 0.65));
+
+    const summary=document.createElement('div');
+    summary.className='gallery-summary';
+    summary.innerHTML=`<span>🐺${entry.counts.wolves}</span><span>🦌${entry.counts.deer}</span><span>🌿${entry.counts.grass}</span>`;
+    card.appendChild(summary);
+
+    const time=document.createElement('div');
+    time.className='gallery-time';
+    time.textContent=new Date(entry.savedAt).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    card.appendChild(time);
+
+    grid.appendChild(card);
+  });
+}
+
+// ── タブ切り替え ─────────────────────────────────────────────────
+function switchTab(tab){
+  currentTab=tab;
+  document.getElementById('editView').style.display    = tab==='edit'?'flex':'none';
+  document.getElementById('galleryView').style.display = tab==='gallery'?'block':'none';
+  document.getElementById('tabEdit').className    = 'tab-btn'+(tab==='edit'?' active':'');
+  document.getElementById('tabGallery').className = 'tab-btn'+(tab==='gallery'?' active':'');
+  if(tab==='gallery') renderGallery();
+}
+
+// ── WebSocket 接続 ───────────────────────────────────────────────
+function connectWS(name){
+  const proto = location.protocol==='https:'?'wss':'ws';
+  ws = new WebSocket(`${proto}://${location.host}`);
+
+  ws.onopen = ()=>{
+    document.getElementById('wsDot').className='ws-dot connected';
+    document.getElementById('headerSub').textContent=`${name} さん · 接続中`;
+    ws.send(JSON.stringify({ type:'join', name }));
+    sendSave();
+  };
+
+  ws.onmessage = e=>{
+    try {
+      const msg = JSON.parse(e.data);
+      if(msg.type==='gallery'){
+        gallery = msg.data;
+        if(currentTab==='gallery') renderGallery();
+        else {
+          const badge=document.getElementById('galleryBadge');
+          if(gallery.length>0){ badge.style.display='inline'; badge.textContent=gallery.length; }
+        }
+      }
+    } catch{}
+  };
+
+  ws.onclose = ()=>{
+    document.getElementById('wsDot').className='ws-dot';
+    document.getElementById('headerSub').textContent=`切断 · 3秒後に再接続…`;
+    setTimeout(()=>connectWS(name), 3000);
+  };
+
+  ws.onerror = ()=>ws.close();
+}
+
+// ── 参加 ────────────────────────────────────────────────────────
+function joinGallery(){
+  const name = document.getElementById('nameInput').value.trim();
+  if(!name) return;
+  myName = name;
+  document.getElementById('joinScreen').style.display='none';
+  document.getElementById('mainScreen').style.display='block';
+  ['wolves','deer','grass'].forEach(updateUI);
+  renderMyPyramid();
+  connectWS(name);
+}
+
+// 入力制御
+document.getElementById('nameInput').addEventListener('input', e=>{
+  document.getElementById('joinBtn').disabled = !e.target.value.trim();
+});
+document.getElementById('nameInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter') joinGallery();
+});
+</script>
+</body>
+</html>
