@@ -484,16 +484,27 @@ function connectWS(name){
   };
 
   ws.onclose = ()=>{
-    document.getElementById('wsDot').className = 'ws-dot';
+  document.getElementById('wsDot').className = 'ws-dot';
 
-  if(!allowReconnect){
-    document.getElementById('headerSub').textContent = 'ログアウトしました';
+  // ログアウト中は再接続しない
+  if(typeof allowReconnect !== 'undefined' && !allowReconnect){
+    const el = document.getElementById('headerSub');
+    if(el) el.textContent = 'ログアウトしました';
     return;
   }
-    
-  document.getElementById('headerSub').textContent = '切断 · 3秒後に再接続…';
-  setTimeout(()=>connectWS(myname), 3000);  
-  };
+
+  const el = document.getElementById('headerSub');
+  if(el) el.textContent = '切断 · 3秒後に再接続…';
+
+  // ここがポイント：変数名が違っても落ちないようにする
+  const n =
+    (typeof myName !== 'undefined' && myName) ? myName :
+    (typeof name  !== 'undefined' && name)  ? name  :
+    (typeof userName !== 'undefined' && userName) ? userName :
+    '';
+
+  setTimeout(()=>connectWS(n), 3000);
+};
 }
 
 // ── 参加 ────────────────────────────────────────────────────────
