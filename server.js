@@ -142,7 +142,16 @@ function handleMessage(socketKey, msg) {
     broadcastGallery();
   }
 }
-
+if (msg.type === 'logout') {
+  if (client.name) {
+    pyramids.delete(client.name); // ギャラリーから自分のデータを消す
+    console.log(`🚪 ${client.name} がログアウト`);
+  }
+  client.name = null;
+  clients.set(socketKey, client);
+  sendTo(socketKey, { type: 'logged_out' });
+  broadcastGallery();
+}
 // ── ブロードキャスト ───────────────────────────────────────────
 function galleryArray() {
   return [...pyramids.values()].sort((a, b) => b.savedAt - a.savedAt);
