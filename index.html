@@ -490,7 +490,7 @@ function connectWS(name){
     document.getElementById('headerSub').textContent = 'ログアウトしました';
     return;
   }
-
+    
   document.getElementById('headerSub').textContent = '切断 · 3秒後に再接続…';
   setTimeout(()=>connectWS(name), 3000);  
   };
