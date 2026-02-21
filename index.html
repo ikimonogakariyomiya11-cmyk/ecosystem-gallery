@@ -231,8 +231,7 @@ body{
       </button>
     </div>
   </div>
-
-  <div class="content">
+<button class="logout-btn" onclick="logout()">ログアウト</button>  <div class="content">
     <!-- 編集タブ -->
     <div id="editView" class="edit-layout">
       <div class="preview-card">
@@ -314,7 +313,8 @@ let gallery = [];
 let ws = null;
 let saveTimer = null;
 let currentTab = 'edit';
-
+let allowReconnect = true;
+  
 // ── ピラミッド描画 ───────────────────────────────────────────────
 function iconSize(n){ return n<=1?36:n<=4?28:n<=10?22:18; }
 function tierW(n,mc){ if(!n)return 80; const s=iconSize(n),c=Math.min(n,mc); return c*s+(c-1)*GAP+PAD; }
@@ -484,12 +484,16 @@ function connectWS(name){
   };
 
   ws.onclose = ()=>{
-    document.getElementById('wsDot').className='ws-dot';
-    document.getElementById('headerSub').textContent=`切断 · 3秒後に再接続…`;
-    setTimeout(()=>connectWS(name), 3000);
-  };
+    document.getElementById('wsDot').className = 'ws-dot';
 
-  ws.onerror = ()=>ws.close();
+  if(!allowReconnect){
+    document.getElementById('headerSub').textContent = 'ログアウトしました';
+    return;
+  }
+
+  document.getElementById('headerSub').textContent = '切断 · 3秒後に再接続…';
+  setTimeout(()=>connectWS(name), 3000);  
+  };
 }
 
 // ── 参加 ────────────────────────────────────────────────────────
@@ -511,6 +515,30 @@ document.getElementById('nameInput').addEventListener('input', e=>{
 document.getElementById('nameInput').addEventListener('keydown', e=>{
   if(e.key==='Enter') joinGallery();
 });
+ function logout(){
+  allowReconnect = false;
+
+  // サーバーにログアウトを通知
+  try{
+    if(ws && ws.readyState===1){
+      ws.send(JSON.stringify({ type:'logout' }));
+    }
+  }catch{}
+
+  // 接続を閉じる
+  try{ if(ws) ws.close(); }catch{}
+  ws = null;
+
+  // 参加画面に戻す
+  myName = '';
+  document.getElementById('mainScreen').style.display='none';
+  document.getElementById('joinScreen').style.display='flex';
+  document.getElementById('nameInput').value='';
+  document.getElementById('joinBtn').disabled = true;
+
+  // 次回参加のために戻す
+  setTimeout(()=>{ allowReconnect = true; }, 200);
+}
 </script>
 </body>
 </html>
