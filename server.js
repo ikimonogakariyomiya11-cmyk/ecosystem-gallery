@@ -11,7 +11,7 @@ const fs   = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // ── インメモリ状態 ─────────────────────────────────────────────
 const clients  = new Map(); // socketKey → { socket, name }
