@@ -141,17 +141,18 @@ function handleMessage(socketKey, msg) {
     console.log(`💾 ${client.name} が保存: 🐺${msg.counts.wolves} 🦌${msg.counts.deer} 🌿${msg.counts.grass}`);
     broadcastGallery();
   }
-}
-if (msg.type === 'logout') {
-  if (client.name) {
-    pyramids.delete(client.name); // ギャラリーから自分のデータを消す
-    console.log(`🚪 ${client.name} がログアウト`);
+  if (msg.type === 'logout') {
+    if (client.name) {
+      pyramids.delete(client.name); // ギャラリーから自分のデータを消す
+      console.log(`🚪 ${client.name} がログアウト`);
+    }
+    client.name = null;
+    clients.set(socketKey, client);
+    sendTo(socketKey, { type: 'logged_out' });
+    broadcastGallery();
   }
-  client.name = null;
-  clients.set(socketKey, client);
-  sendTo(socketKey, { type: 'logged_out' });
-  broadcastGallery();
 }
+
 // ── ブロードキャスト ───────────────────────────────────────────
 function galleryArray() {
   return [...pyramids.values()].sort((a, b) => b.savedAt - a.savedAt);
